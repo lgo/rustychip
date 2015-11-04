@@ -1,40 +1,30 @@
 use rustychip::instructions::executeOpcode as executeOpcode;
 use rustychip::opcode::Opcode as Opcode;
-use rustychip::consts as Consts;
-use rustychip::mem::Mem as Mem;
+use rustychip::util as Util;
 
 pub struct Cpu {
     drawFlag: bool,
-    memory: Mem<u8>, // 4096
-    V: Mem<u8>, // 16
+    memory: [u8; 4096],
+    V: [u8; 16],
     I: u16,
     pc: u16,
-    gfx: Mem<u8>, // 64 * 32
+    gfx: [u8; 64 * 32],
     delay_timer: u8,
     sound_timer: u8,
-    stack: Mem<u16>, // 16
+    stack: [u16; 16],
     sp: u16,
-    key: Mem<u8> // 16
+    key: [u8; 16]
 }
 
 impl Cpu {
 
     pub fn new() -> Cpu {
-        let memory: Mem<u8>;
-        for i in 0..Consts::font_set.length() {
-            memory[i] = Consts::font_set;
-        }
-        for i in Consts::font_set.length()..4096 {
-            memory[i] = 0;
-        }
-
         Cpu {
             pc: 0x200, // Program counter starts at 0x200
-            memory: memory,
             opcode: 0, // Reset current opcode
             I: 0, // Reset index register
             sp: 0, // Reset stack pointer
-            memory: [..Consts::fontset, 0] // load in font_set
+            memory: [..Util::fontset, 0] // load in font_set
         }
     }
 

@@ -1,6 +1,7 @@
-
 use rustychip::opcode::Opcode as Opcode;
 use rustychip::cpu::Cpu as Cpu;
+#[macro_use]
+use rustychip::macros;
 
 pub fn executeOpcode(opcode: Opcode, cpu: Cpu) {
     // execute opcode
@@ -32,7 +33,7 @@ pub fn executeOpcode(opcode: Opcode, cpu: Cpu) {
         0x2000 => {
             // CALL addr
             // calls subroutine at addr
-            cpu.stack[cpu.sp] = opcode.address;
+            cpu.stack[cast!(cpu.sp)] = opcode.address;
             cpu.sp += 1;
         },
         0x3000 => {
