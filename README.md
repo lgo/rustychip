@@ -1,2 +1,2 @@
-# chip8
-Z80 Emulator in Rust.
+# rustychip
+Chip8 Emulator in Rust.

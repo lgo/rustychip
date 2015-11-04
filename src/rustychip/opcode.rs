@@ -1,16 +1,14 @@
-type Instruction = u16;
-
 struct Opcode {
-    code: Instruction,
-    X: Instruction,
-    Y: Instruction,
-    address: Instruction,
-    const8bit: Instruction,
-    const4bit: Instruction
+    code: u16,
+    X: u16,
+    Y: u16,
+    address: u16,
+    const8bit: u16,
+    const4bit: u16
 }
 
 impl Opcode {
-    fn new(Instruction: code) {
+    fn new(code: u16) {
         return Opcode {
             code: code,
             X: code & 0x0F00 << 8,

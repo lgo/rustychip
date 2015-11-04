@@ -1,29 +1,29 @@
-mod chip8;
-use chip8::Chip8 as Chip8;
+mod rustychip;
+
+use rustychip::cpu::Cpu as RustyChip;
 
 fn main () {
-    let chip8 = Chip8();
+    let chip = RustyChip::new();
 
     // set up render system and register input callbacks
     setupGraphics();
     setupInput();
 
     // initialize chip8 system and load game into memory
-    chip8.initialize();
-    chip8.loadGame("pong");
+    chip.loadGame("pong");
 
     // emulation loop
     loop {
         // emulate one cycle
-        chip8.emulateCycle();
+        chip.emulateCycle();
 
         // if draw flag is set, update the screen
-        if (chip8.drawFlag) {
-            drawGraphics();
+        if (chip.drawFlag) {
+            drawGraphics(chip);
         }
 
         // store key press state (press and release)
-        chip8.setKeys();
+        chip.setKeys();
     }
 }
 
@@ -35,6 +35,6 @@ fn setupInput () {
 
 }
 
-fn drawGraphics () {
+fn drawGraphics (Cpu: RustyChip) {
 
 }
