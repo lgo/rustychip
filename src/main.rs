@@ -10,7 +10,8 @@ fn main () {
     setupInput();
 
     // initialize chip8 system and load game into memory
-    chip.loadGame("pong");
+    let game: [u8; 0] = [0; 0];
+    chip.loadGame(&game);
 
     // emulation loop
     loop {
