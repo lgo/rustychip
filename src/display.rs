@@ -2,8 +2,8 @@ use sdl::video;
 use sdl::Rect;
 
 pub struct Display {
-    gfx: [[u8; 64]; 32],
-    draw_flag: bool,
+    pub gfx: [[u8; 64]; 32],
+    pub draw_flag: bool,
     screen: video::Surface
 }
 

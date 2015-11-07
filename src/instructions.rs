@@ -209,6 +209,28 @@ fn op_Dxxx(cpu: &mut Cpu, opcode: &Opcode) {
     let y: u8 = cpu.v[opcode.y];
     cpu.v[15] = cpu.display.draw(x as usize, y as usize, &cpu.memory[from .. to]);
     cpu.pc += 2;
+
+
+    cpu.v[0xF] = 0;
+
+    let height = opcode.code & 0x000F;
+    let regX = cpu.v[opcode.x] as usize;
+    let regY = cpu.v[opcode.y] as usize;
+    let mut spr;
+
+    for y in 0..height {
+        spr = cpu.memory[cpu.i + y as usize];
+        for x in 0..8 {
+            if (spr & 0x80) > 0 {
+                cpu.display.gfx[regX + x][regY + y as usize] = cpu.display.gfx[regX + x][regY + y as usize] ^ 1;
+                if cpu.display.gfx[regX + x as usize][regY + y as usize] == 1{
+                    cpu.v[0xF] = 1;
+                }
+            }
+            spr <<= 1;
+        }
+    }
+    cpu.display.draw_flag = true;
 }
 
 fn op_Exxx(cpu: &mut Cpu, opcode: &Opcode) {

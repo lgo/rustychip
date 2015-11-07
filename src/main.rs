@@ -70,7 +70,7 @@ fn main() {
         let cycle_time = time::precise_time_ns() - start_cycle;
         let wait_time = 500 * MS_TO_NS - cycle_time;
         if wait_time > 0 {
-            thread::sleep(Duration::from_millis(wait_time))
+            thread::sleep(Duration::from_millis(wait_time / MS_TO_NS))
         }
     }
 
