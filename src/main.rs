@@ -1,41 +1,78 @@
-mod rustychip;
+extern crate sdl;
+extern crate getopts;
+extern crate time;
 
-use rustychip::cpu::Cpu as RustyChip;
+use getopts::Options;
 
-fn main () {
-    let chip = RustyChip::new();
+use sdl::event::Event;
 
-    // set up render system and register input callbacks
-    setupGraphics();
-    setupInput();
+use std::env;
+use std::time::Duration;
+use std::thread;
 
-    // initialize chip8 system and load game into memory
-    let game: [u8; 0] = [0; 0];
-    chip.loadGame(&game);
+use cpu::Cpu as RustyChip;
 
-    // emulation loop
-    loop {
-        // emulate one cycle
-        chip.emulateCycle();
+mod cpu;
+mod instructions;
+mod opcode;
+mod util;
+mod display;
+mod keypad;
+mod loader;
 
-        // if draw flag is set, update the screen
-        if (chip.drawFlag) {
-            drawGraphics(chip);
+static MS_TO_NS: u64 = 1000000;
+
+fn parse_arguments() -> String {
+    let args: Vec<String> = env::args().collect();
+    let mut opts = Options::new();
+    opts.optflag("d", "debug", "print debug information");
+    let matches = match opts.parse(&args[1..]) {
+        Ok(m) => { m }
+        Err(f) => { panic!(f.to_string()) }
+    };
+    if matches.opt_present("d") {
+        unsafe {
+            util::DEBUG_MODE = true;
         }
-
-        // store key press state (press and release)
-        chip.setKeys();
+    }
+    if !matches.free.is_empty() {
+        return matches.free[0].clone();
+    }
+    else {
+        return String::from("pong");
     }
 }
 
-fn setupGraphics () {
+fn main() {
 
-}
+    let game_name: String = parse_arguments();
 
-fn setupInput () {
+    let mut chip = RustyChip::new();
 
-}
+    loader::load_game(&mut chip, game_name);
 
-fn drawGraphics (Cpu: RustyChip) {
+    sdl::init(&[sdl::InitFlag::Video, sdl::InitFlag::Audio, sdl::InitFlag::Timer]);
 
+    'main : loop {
+        let start_cycle = time::precise_time_ns();
+        'event : loop {
+            match sdl::event::poll_event() {
+                Event::Quit                  => break 'main,
+                Event::None                  => break 'event,
+                Event::Key(key, state, _, _) => chip.keypad.press(key, state),
+                _                            => {}
+            }
+        }
+
+        chip.emulate_cycle();
+        chip.display.draw_screen();
+
+        let cycle_time = time::precise_time_ns() - start_cycle;
+        let wait_time = 500 * MS_TO_NS - cycle_time;
+        if wait_time > 0 {
+            thread::sleep(Duration::from_millis(wait_time))
+        }
+    }
+
+    sdl::quit();
 }

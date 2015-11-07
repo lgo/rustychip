@@ -1,4 +1,9 @@
-pub static fontset: [u8; 80] =
+use cpu::Cpu;
+use opcode::Opcode;
+
+pub static mut DEBUG_MODE: bool = false;
+
+pub static FONTSET: [u8; 80] =
 [
   0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
   0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -17,3 +22,18 @@ pub static fontset: [u8; 80] =
   0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
   0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 ];
+
+pub fn debug_cycle(cpu: &Cpu, opcode: &Opcode) {
+    unsafe {
+        if !DEBUG_MODE { return }
+    }
+    println!("cpu:");
+    for i in 0..16 {
+        if cpu.v[i] == 0 { continue; }
+        println!("      v{:.x}: {:.x}", i, cpu.v[i]);
+    }
+    println!("    pc: {:.x}", cpu.pc);
+    println!("    I: {:.x}", cpu.i);
+    println!("    sp: {:.x}", cpu.sp);
+    println!("opcode: {:.x}", opcode.code);
+}
