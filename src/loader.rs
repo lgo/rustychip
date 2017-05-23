@@ -17,7 +17,7 @@ fn load_to_memory(cpu: &mut Cpu, reader: &mut File) {
                 cpu.memory[cpu.pc] = value;
                 cpu.pc += 1;
             }
-            Err(_)   => {
+            Err(_) => {
                 break;
             }
         }

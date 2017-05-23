@@ -27,8 +27,8 @@ fn parse_arguments() -> String {
     let mut opts = Options::new();
     opts.optflag("d", "debug", "print debug information");
     let matches = match opts.parse(&args[1..]) {
-        Ok(m) => { m }
-        Err(f) => { panic!(f.to_string()) }
+        Ok(m) => m,
+        Err(f) => panic!(f.to_string()),
     };
     if matches.opt_present("d") {
         unsafe {
@@ -37,35 +37,32 @@ fn parse_arguments() -> String {
     }
     if !matches.free.is_empty() {
         return matches.free[0].clone();
-    }
-    else {
+    } else {
         return String::from("pong");
     }
 }
 
 fn main() {
-
     let game_name: String = parse_arguments();
-
     let mut chip = RustyChip::new();
-
     loader::load_game(&mut chip, game_name);
+    // sdl::init(&[sdl::InitFlag::Video,
+    //             sdl::InitFlag::Audio,
+    //             sdl::InitFlag::Timer]);
 
-    sdl::init(&[sdl::InitFlag::Video, sdl::InitFlag::Audio, sdl::InitFlag::Timer]);
-
-    'main : loop {
+    'main: loop {
         let start_cycle = time::precise_time_ns();
-        'event : loop {
+        'event: loop {
             match sdl::event::poll_event() {
-                Event::Quit                  => break 'main,
-                Event::None                  => break 'event,
+                Event::Quit => break 'main,
+                Event::None => break 'event,
                 Event::Key(key, state, _, _) => chip.keypad.press(key, state),
-                _                            => {}
+                _ => {}
             }
         }
 
         chip.emulate_cycle();
-        chip.display.draw_screen();
+        // chip.display.draw_screen();
 
         let cycle_time = time::precise_time_ns() - start_cycle;
         let wait_time = 500 * MS_TO_NS - cycle_time;

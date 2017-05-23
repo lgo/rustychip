@@ -1,50 +1,8 @@
 #![allow(non_snake_case)]
 
-use opcode::Opcode as Opcode;
-use cpu::Cpu as Cpu;
+use opcode::Opcode;
+use cpu::Cpu;
 
-pub fn opcode_execute(cpu: &mut Cpu, opcode: &Opcode) {
-    cpu.pc += 2;
-    match opcode.code & 0xf000 {
-        0x0000 => op_0xxx(cpu, opcode),
-        0x1000 => op_1xxx(cpu, opcode),
-        0x2000 => op_2xxx(cpu, opcode),
-        0x3000 => op_3xxx(cpu, opcode),
-        0x4000 => op_4xxx(cpu, opcode),
-        0x5000 => op_5xxx(cpu, opcode),
-        0x6000 => op_6xxx(cpu, opcode),
-        0x7000 => op_7xxx(cpu, opcode),
-        0x8000 => op_8xxx(cpu, opcode),
-        0x9000 => op_9xxx(cpu, opcode),
-        0xA000 => op_Axxx(cpu, opcode),
-        0xB000 => op_Bxxx(cpu, opcode),
-        0xC000 => op_Cxxx(cpu, opcode),
-        0xD000 => op_Dxxx(cpu, opcode),
-        0xE000 => op_Exxx(cpu, opcode),
-        0xF000 => op_Fxxx(cpu, opcode),
-        _      => not_implemented(opcode.code as usize, cpu.pc)
-    }
-}
-
-fn not_implemented(op: usize, pc: usize) {
-    println!("Not implemented:: op: {:x}, pc: {:x}", op, pc);
-}
-
-fn op_0xxx(cpu: &mut Cpu, opcode: &Opcode) {
-    match opcode.code {
-        0x00E0 => {
-            // CLS
-            // clear screen
-            cpu.display.clear();
-        },
-        0x00EE => {
-            // RET
-            // returns from subroutine
-            cpu.sp -= 1;
-        },
-        _      => { not_implemented(opcode.code as usize, cpu.pc) }
-    }
-}
 fn op_1xxx(cpu: &mut Cpu, opcode: &Opcode) {
     // JP addr
     // jumps to addr
@@ -100,64 +58,61 @@ fn op_8xxx(cpu: &mut Cpu, opcode: &Opcode) {
             // LD Vx, Vy
             // set VX to VY
             cpu.v[opcode.x] += cpu.v[opcode.y];
-        },
+        }
         0x0001 => {
             // OR Vx, Vy
             // sets VX to VX or VY
             cpu.v[opcode.x] |= cpu.v[opcode.y];
-        },
+        }
         0x0002 => {
             // AND Vx, Vy
             // sets VX to VX and VY
             cpu.v[opcode.x] &= cpu.v[opcode.y];
-        },
+        }
         0x0003 => {
             // XOR Vx, Vy
             // sets VX to VX and VY
             cpu.v[opcode.x] ^= cpu.v[opcode.y];
-        },
+        }
         0x0004 => {
             // ADD Vx, Vy
             // incr VX by VY, if VF = 1 if carry else 0
             if cpu.v[opcode.y] < (0xFF - cpu.v[opcode.x]) {
                 cpu.v[0xF] = 1;
-            }
-            else {
+            } else {
                 cpu.v[0xF] = 0;
             };
 
             cpu.v[opcode.x] = (cpu.v[opcode.x] as u16 + cpu.v[opcode.y] as u16) as u8;
-        },
+        }
         0x0005 => {
             // SUB Vx, Vy
             // sub VX by VY, if VF = 0 if borrow else 1
             if cpu.v[opcode.y] > cpu.v[opcode.x] {
                 cpu.v[0xF] = 1;
-            }
-            else {
+            } else {
                 cpu.v[0xF] = 0;
             }
 
             cpu.v[opcode.x] -= cpu.v[opcode.y];
-        },
+        }
         0x0006 => {
             // SHR Vx {, Vy}
             // right ship VX by 1. Set VF to the least significant bit before shifting
             cpu.v[0xF] = cpu.v[opcode.x] & 0x0001;
             cpu.v[opcode.x] >> 1;
-        },
+        }
         0x0007 => {
             // SUBN Vx, Vy
             // sub VX by VY, if VF = 0 if borrow else 1
             if cpu.v[opcode.x] > cpu.v[opcode.y] {
                 cpu.v[0xF] = 1;
-            }
-            else {
+            } else {
                 cpu.v[0xF] = 0;
             }
 
             cpu.v[opcode.x] = cpu.v[opcode.y] - cpu.v[opcode.x];
-        },
+        }
         0x000E => {
             // SHL Vx {, Vy}
             // Set Vx = Vx SHL 1.
@@ -165,7 +120,7 @@ fn op_8xxx(cpu: &mut Cpu, opcode: &Opcode) {
             // Then Vx is multiplied by 2.
             // TODO
         }
-        _      => { not_implemented(opcode.code as usize, cpu.pc) }
+        _ => not_implemented(opcode.code as usize, cpu.pc),
     }
 }
 
@@ -186,7 +141,7 @@ fn op_Axxx(cpu: &mut Cpu, opcode: &Opcode) {
 fn op_Bxxx(cpu: &mut Cpu, opcode: &Opcode) {
     // JP V0, addr
     // jumps to address + V0
-    cpu.pc = opcode.address+ cpu.v[0x0] as usize;
+    cpu.pc = opcode.address + cpu.v[0x0] as usize;
 }
 
 fn op_Cxxx(cpu: &mut Cpu, opcode: &Opcode) {
@@ -207,7 +162,8 @@ fn op_Dxxx(cpu: &mut Cpu, opcode: &Opcode) {
     let to: usize = from + opcode.const4bit as usize;
     let x: u8 = cpu.v[opcode.x];
     let y: u8 = cpu.v[opcode.y];
-    cpu.v[15] = cpu.display.draw(x as usize, y as usize, &cpu.memory[from .. to]);
+    cpu.v[15] = cpu.display
+        .draw(x as usize, y as usize, &cpu.memory[from..to]);
     cpu.pc += 2;
 
 
@@ -222,8 +178,9 @@ fn op_Dxxx(cpu: &mut Cpu, opcode: &Opcode) {
         spr = cpu.memory[cpu.i + y as usize];
         for x in 0..8 {
             if (spr & 0x80) > 0 {
-                cpu.display.gfx[regX + x][regY + y as usize] = cpu.display.gfx[regX + x][regY + y as usize] ^ 1;
-                if cpu.display.gfx[regX + x as usize][regY + y as usize] == 1{
+                cpu.display.gfx[regX + x][regY + y as usize] =
+                    cpu.display.gfx[regX + x][regY + y as usize] ^ 1;
+                if cpu.display.gfx[regX + x as usize][regY + y as usize] == 1 {
                     cpu.v[0xF] = 1;
                 }
             }
@@ -241,15 +198,15 @@ fn op_Exxx(cpu: &mut Cpu, opcode: &Opcode) {
             if cpu.keypad.pressed(cpu.v[opcode.x] as usize) {
                 cpu.pc += 2;
             }
-        },
+        }
         0x00A1 => {
             // SKNP Vx
             // Skips the next instruction if the key stored in VX isn't pressed.
             if !cpu.keypad.pressed(cpu.v[opcode.x] as usize) {
                 cpu.pc += 2;
             }
-        },
-        _      => { not_implemented(opcode.code as usize, cpu.pc) }
+        }
+        _ => not_implemented(opcode.code as usize, cpu.pc),
     }
 }
 
@@ -259,7 +216,7 @@ fn op_Fxxx(cpu: &mut Cpu, opcode: &Opcode) {
             // LD Vx, DT
             // Sets VX to the value of the delay timer.
             cpu.v[opcode.x] = cpu.delay_timer;
-        },
+        }
         0x000A => {
             // LD Vx, K
             // A key press is awaited, and then stored in VX.
@@ -270,17 +227,17 @@ fn op_Fxxx(cpu: &mut Cpu, opcode: &Opcode) {
                 }
             }
             cpu.pc -= 2;
-        },
+        }
         0x0015 => {
             // LD DT, Vx
             // Sets the delay timer to VX.
             cpu.delay_timer = cpu.v[opcode.x];
-        },
+        }
         0x0018 => {
             // LD ST, Vx
             // Sets the sound timer to VX.
             cpu.sound_timer = cpu.v[opcode.x];
-        },
+        }
         0x001E => {
             // ADD I, Vx
             // adds VX to I
@@ -289,19 +246,18 @@ fn op_Fxxx(cpu: &mut Cpu, opcode: &Opcode) {
             // This is undocumented feature of the CHIP-8 and used by Spacefight 2091! game.
             if cpu.i as u16 + (cpu.v[opcode.x] as u16) > 0xFFF {
                 cpu.v[0xF] = 1;
-            }
-            else {
+            } else {
                 cpu.v[0xF] = 0;
             }
 
             cpu.i += cpu.v[opcode.x] as usize;
-        },
+        }
         0x0029 => {
             // LD F, Vx
             // Sets I to the location of the sprite for the character in VX.
             // Characters 0-F (in hexadecimal) are represented by a 4x5 font.
 
-        },
+        }
         0x0033 => {
             // LD B, Vx
             // Stores the Binary-coded decimal representation of VX,
@@ -309,21 +265,21 @@ fn op_Fxxx(cpu: &mut Cpu, opcode: &Opcode) {
             // the middle digit at I plus 1, and the least significant digit at I plus 2.
             // (In other words, take the decimal representation of VX, place the hundreds
             // digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.)
-        },
+        }
         0x0055 => {
             // LD [I], Vx
             // Stores V0 to VX in memory starting at address I.
             for i in 0..cpu.v[opcode.x] {
                 cpu.memory[cpu.i + i as usize] = cpu.v[i as usize];
             }
-        },
+        }
         0x0065 => {
             // LD Vx, [I]
             // Fills V0 to VX with values from memory starting at address I.
             for i in 0..cpu.v[opcode.x] {
                 cpu.v[i as usize] = cpu.memory[cpu.i + i as usize];
             }
-        },
-        _      => { not_implemented(opcode.code as usize, cpu.pc) }
+        }
+        _ => not_implemented(opcode.code as usize, cpu.pc),
     }
 }
