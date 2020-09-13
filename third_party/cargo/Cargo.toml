@@ -1,0 +1,44 @@
+[package]
+name = "compile_with_bazel"
+version = "0.0.0"
+
+[dependencies]
+getopts = "0.2"
+# env-logger relies on the `std` feature of log, but does not declare it. That
+# means we need to ensure that feature is requested for the env-logger version
+# (0.4.6) of log.
+log = {version = "=0.4.6", features = ["std"]}
+bindgen = "0.35.0"
+sdl2 = "0.31.0"
+time = "0.1.33"
+
+[lib]
+path = "fake_lib.rs"
+
+[raze]
+workspace_path = "//third_party/cargo"
+target = "x86_64-unknown-linux-gnu"
+genmode = "Remote"
+
+[raze.crates.bindgen.'0.35.0']
+gen_buildrs = true
+extra_aliased_targets = [
+  "cargo_bin_bindgen"
+]
+
+[raze.crates.sdl2.'0.31.0']
+skipped_deps = [
+  "sdl2-sys-0.31.0"
+]
+additional_deps = [
+  "@//third_party/cargo/overrides/sdl2-sys:sdl2_sys"
+]
+
+[raze.crates.clang-sys.'0.22.0']
+gen_buildrs = false
+skipped_deps = [
+  "libloading-0.5.0"
+]
+additional_deps = [
+  "@//third_party/cargo/overrides/libloading-0.5.0:libloading",
+]

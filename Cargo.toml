@@ -8,8 +8,3 @@ authors = ["Joey Pereira <joey@pereira.io>"]
 
 name = "rustychip"
 path = "src/main.rs"
-
-[dependencies]
-getopts = "0.2"
-sdl = "0.3.6"
-time = "0.1.33"
