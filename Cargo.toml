@@ -11,5 +11,5 @@ path = "rustychip/main.rs"
 
 [dependencies]
 getopts = "0.2"
-sdl = "0.3.6"
+sdl2 = "0.31.0"
 time = "0.1.33"

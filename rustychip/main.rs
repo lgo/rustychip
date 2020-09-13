@@ -1,16 +1,16 @@
-extern crate sdl;
+extern crate sdl2;
 extern crate getopts;
 extern crate time;
 
 use getopts::Options;
 
-use sdl::event::Event;
+use sdl2::event::Event;
 
 use std::env;
 use std::time::Duration;
 use std::thread;
 
-use cpu::Cpu as RustyChip;
+use cpu::Cpu;
 
 mod cpu;
 mod opcode;
@@ -43,19 +43,23 @@ fn parse_arguments() -> String {
 
 fn main() {
     let game_name: String = parse_arguments();
-    let mut chip = RustyChip::new();
+    let sdl_context = sdl2::init().unwrap();
+
+    let mut chip = Cpu::new(sdl_context);
     loader::load_game(&mut chip, game_name);
     // sdl::init(&[sdl::InitFlag::Video,
     //             sdl::InitFlag::Audio,
     //             sdl::InitFlag::Timer]);
 
+    let event_pump = sdl_context.event_pump().unwrap();
+
     'main: loop {
         let start_cycle = time::precise_time_ns();
-        'event: loop {
-            match sdl::event::poll_event() {
-                Event::Quit => break 'main,
-                Event::None => break 'event,
-                Event::Key(key, state, _, _) => chip.keypad.press(key, state),
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit { .. } => break 'main,
+                Event::KeyDown { keycode, .. } => chip.keypad.press(keycode, true),
+                Event::KeyUp { keycode, .. } => chip.keypad.press(keycode, false),
                 _ => {}
             }
         }
@@ -69,6 +73,4 @@ fn main() {
             thread::sleep(Duration::from_millis(wait_time / MS_TO_NS))
         }
     }
-
-    sdl::quit();
 }

@@ -1,25 +1,43 @@
-use sdl::video;
-use sdl::Rect;
+use sdl2::video;
+use sdl2::rect::Rect;
+use std::sync::{Arc, Mutex};
 
 pub struct Display {
     pub gfx: [[u8; 64]; 32],
     pub draw_flag: bool,
-    screen: video::Surface,
+    screen: video::Window,
 }
 
-static SCALE: isize = 20;
+static SCALE: u32 = 20;
 
 impl Display {
-    pub fn new() -> Display {
+    pub fn new(context: sdl2::Sdl) -> Display {
+        let window = context.video().unwrap().window(
+            "rustychip",
+            64 * SCALE,
+            32 * SCALE,
+            // 8,
+            //                           &[video::SurfaceFlag::HWSurface],
+            //                           &[video::VideoFlag::DoubleBuf])
+        ).position_centered().opengl().build().unwrap();
+
+		// Build the renderer that is used to draw anything to the window. Currently it is always
+		// hardware accelerated.
+        // let renderer = Arc::new(Mutex::new(window.renderer().accelerated().build().unwrap()));
+        
+        let surface = window.surface().unwra();
+
         Display {
             gfx: [[0; 64]; 32],
             draw_flag: true,
-            screen: video::set_video_mode(64 * SCALE,
-                                          32 * SCALE,
-                                          8,
-                                          &[video::SurfaceFlag::HWSurface],
-                                          &[video::VideoFlag::DoubleBuf])
-                    .unwrap(),
+            screen: context.video().unwrap().window(
+                "rustychip",
+                64 * SCALE,
+                32 * SCALE,
+                // 8,
+                //                           &[video::SurfaceFlag::HWSurface],
+                //                           &[video::VideoFlag::DoubleBuf])
+            ).position_centered().opengl().build().unwrap(),
         }
     }
 
@@ -70,7 +88,7 @@ impl Display {
                                         w: sc,
                                         h: sc,
                                     }),
-                               video::RGB(pixel, pixel, pixel));
+                               sdl2::pixels::Color::RGB(pixel, pixel, pixel));
             }
         }
 

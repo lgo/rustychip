@@ -24,7 +24,7 @@ fn not_implemented(op: usize, pc: usize) {
 }
 
 impl Cpu {
-    pub fn new() -> Cpu {
+    pub fn new(&context: &sdl2::Sdl) -> Cpu {
         let mut cpu: Cpu = Cpu {
             v: [0; 16],
             gfx: [0; 64 * 32],
@@ -37,7 +37,7 @@ impl Cpu {
             sp: 0, // Reset stack pointer
             memory: [0; 4096],
 
-            display: Display::new(),
+            display: Display::new(context),
             keypad: Keypad::new(),
         };
         // load in Util::fontset
