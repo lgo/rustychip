@@ -13,7 +13,6 @@ use std::thread;
 use cpu::Cpu as RustyChip;
 
 mod cpu;
-mod instructions;
 mod opcode;
 mod util;
 mod display;

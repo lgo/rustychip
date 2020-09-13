@@ -1,0 +1,14 @@
+{
+    "search.useIgnoreFiles": true,
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "bazel-*/": true,
+        "target/": true,
+        "**/Cargo.lock": true,
+        "third_party/cargo/vendor": true,
+    }
+}

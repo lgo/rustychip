@@ -7,7 +7,7 @@ authors = ["Joey Pereira <joey@pereira.io>"]
 [[bin]]
 
 name = "rustychip"
-path = "src/main.rs"
+path = "rustychip/main.rs"
 
 [dependencies]
 getopts = "0.2"
