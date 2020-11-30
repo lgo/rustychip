@@ -1,15 +1,16 @@
 [package]
 
-name = "rustychip"
+name = "rusty-emulators"
 version = "0.0.1"
 authors = ["Joey Pereira <joey@pereira.io>"]
+edition = "2018"
 
 [[bin]]
 
-name = "rustychip"
-path = "rustychip/main.rs"
+name = "rusty-emulators"
+path = "src/main.rs"
 
 [dependencies]
 getopts = "0.2"
-sdl2 = "0.31.0"
-time = "0.1.33"
+sdl2 = "0.34"
+time = "0.2"
