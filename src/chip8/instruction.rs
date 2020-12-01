@@ -411,18 +411,40 @@ pub enum Instruction {
   /// assert_eq!(instr, Instruction::TimerSetSound { x_register: 0x2 });
   /// ```
   TimerSetSound { x_register: usize },
+  /// Opcode FX1E
+  ///
+  /// Adds Vx to the address register (I).
+  ///
+  /// NB: Vf is not affected. Most CHIP-8 interpreters' FX1E
+  /// instructions do not affect Vf, with one exception: The CHIP-8
+  /// interpreter for the Commodore Amiga sets Vf to 1 when there is a
+  /// range overflow (I+Vx>0xFFF), and to 0 when there isn't. The only
+  /// known game that depends on this behavior is Spacefight 2091! while
+  /// at least one game, Animal Race, depends on Vf not being affected,
+  /// according to:
+  /// https://github.com/Chromatophore/HP48-Superchip/issues/2.
+  ///
+  /// ```
+  /// # use rustyemulator::chip8::instruction::{parse_instruction, Instruction};
+  /// let instr = parse_instruction(0xF21E);
+  /// assert!(matches!(instr, Instruction::MemoryAddVerToAddress {..}), "Expected to parse MemoryAddVerToAddress, instead parsed opcode: {:?}", instr);
+  /// assert_eq!(instr, Instruction::MemoryAddVerToAddress { x_register: 0x2 });
+  /// ```
+  MemoryAddVerToAddress { x_register: usize },
+  /// Opcode FX29
+  ///
+  /// Sets address register (I) to the location of the sprite for the
+  /// character in Vx. Characters 0-F (in hexadecimal) are represented
+  /// by a 4x5 font.
+  ///
+  /// ```
+  /// # use rustyemulator::chip8::instruction::{parse_instruction, Instruction};
+  /// let instr = parse_instruction(0xF229);
+  /// assert!(matches!(instr, Instruction::MemorySetToVarSpriteLocation {..}), "Expected to parse MemorySetToVarSpriteLocation, instead parsed opcode: {:?}", instr);
+  /// assert_eq!(instr, Instruction::MemorySetToVarSpriteLocation { x_register: 0x2 });
+  /// ```
+  MemorySetToVarSpriteLocation { x_register: usize },
 }
-
-//     return Instruction {
-//       code: parse_opcodecode,
-//       x: ((code & 0x0F00) >> 8) as usize,
-//       y: ((code & 0x00F0) >> 4) as usize,
-//       address: (code & 0x0FFF) as usize,
-//       const8bit: code as u8 & 0x0F,
-//       // FIXME(joey): This seems... wrong?
-//       const4bit: code as u8 & 0xFF,
-//     };
-//   }
 
 pub fn parse_instruction(instr: u16) -> Instruction {
   match instr & 0xF000 {
@@ -548,6 +570,12 @@ pub fn parse_instruction(instr: u16) -> Instruction {
         x_register: bitmask_0X00(instr) as usize,
       },
       0x0018 => Instruction::TimerSetSound {
+        x_register: bitmask_0X00(instr) as usize,
+      },
+      0x001E => Instruction::MemoryAddVerToAddress {
+        x_register: bitmask_0X00(instr) as usize,
+      },
+      0x0029 => Instruction::MemorySetToVarSpriteLocation {
         x_register: bitmask_0X00(instr) as usize,
       },
       _ => unimplemented!("Unsupported instruction... TODO"),
