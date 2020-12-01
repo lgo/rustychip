@@ -190,8 +190,10 @@ impl Cpu {
           self.program_counter += 1
         }
       }
-      MemorySetAddress { constant: u16 } => unimplemented!("TODO(joey): implement"),
-      FlowJumpToAddressPlusVar { constant: u16 } => unimplemented!("TODO(joey): implement"),
+      MemorySetAddress { constant } => self.i_register = constant,
+      FlowJumpToAddressPlusVar { constant } => {
+        self.program_counter = (self.v_registers[0] as u16) + constant
+      }
       RandomByConstant {
         x_register,
         constant,
@@ -205,13 +207,25 @@ impl Cpu {
       InputKeyIsNotPressed { x_register } => unimplemented!("TODO(joey): implement"),
       TimerGetDelay { x_register } => unimplemented!("TODO(joey): implement"),
       InputKeyAwaitPress { x_register } => unimplemented!("TODO(joey): implement"),
-      TimerSetDelay { x_register } => unimplemented!("TODO(joey): implement"),
-      TimerSetSound { x_register } => unimplemented!("TODO(joey): implement"),
-      MemoryAddVerToAddress { x_register } => unimplemented!("TODO(joey): implement"),
+      TimerSetDelay { x_register } => self.delay_timer.set_counter(self.v_registers[x_register]),
+      TimerSetSound { x_register } => self.sound_timer.set_counter(self.v_registers[x_register]),
+      MemoryAddVerToAddress { x_register } => {
+        self.i_register += self.v_registers[x_register] as u16
+      }
       MemorySetToVarSpriteLocation { x_register } => unimplemented!("TODO(joey): implement"),
       LoadBinaryCodedDecimal { x_register } => unimplemented!("TODO(joey): implement"),
-      MemoryDump { x_register } => unimplemented!("TODO(joey): implement"),
-      MemoryLoad { x_register } => unimplemented!("TODO(joey): implement"),
+      MemoryDump { x_register } => {
+        // FIXME(joey): Check bounds on iteration, this should be inclusive of `x_register`.
+        for register in 0..x_register {
+          self.memory[self.i_register as usize + register] = self.v_registers[register]
+        }
+      }
+      MemoryLoad { x_register } => {
+        // FIXME(joey): Check bounds on iteration, this should be inclusive of `x_register`.
+        for register in 0..x_register {
+          self.v_registers[register] = self.memory[self.i_register as usize + register]
+        }
+      }
     }
   }
 }
