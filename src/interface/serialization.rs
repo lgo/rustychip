@@ -130,6 +130,28 @@ impl Savable for usize {
   }
 }
 
+impl<T: Savable + Default> Savable for [T] {
+  fn save(&self, fh: &mut dyn Write) -> Result<()> {
+    let len: usize = self.len();
+    len.save(fh)?;
+    for i in self.iter() {
+      i.save(fh)?;
+    }
+
+    Ok(())
+  }
+  fn load(&mut self, fh: &mut dyn Read) -> Result<()> {
+    let mut len = 0usize;
+    len.load(fh)?;
+    for i in 0..len {
+      self[i] = Default::default();
+      self[i].load(fh)?;
+    }
+
+    Ok(())
+  }
+}
+
 impl<T: Savable + Default> Savable for Vec<T> {
   fn save(&self, fh: &mut dyn Write) -> Result<()> {
     let len: usize = self.len();
@@ -196,11 +218,6 @@ mod tests {
   use super::*;
 
   // round_trip will do a round-trip serialization of `value`.
-  //
-  // TODO(joey): I do not know enough Rust to make this method work for
-  // Vec, because the trait implementation is by-value but the method
-  // implementations (load/save) are over `&mut self`, which is
-  // contradictory to a by-reference implementation.
   fn round_trip<T: Default + Savable>(value: T) -> Result<T> {
     let buf = &mut Vec::new();
     // Save the value to the buffer.
@@ -261,29 +278,57 @@ mod tests {
   }
 
   #[test]
+  fn savable_array_with_values_roundtrips() -> Result<()> {
+    let input = [1u8, 2u8, 3u8];
+    let buf = &mut Vec::new();
+    // Save the array.
+    input.save(buf)?;
+    // Read the array value.
+    let mut loaded_array = [0u8; 3];
+    loaded_array.load(&mut buf.as_slice())?;
+    // Compare the results.
+    assert_eq!(loaded_array, input);
+
+    Ok(())
+  }
+  #[test]
+  fn savable_array_with_empty_roundtrips() -> Result<()> {
+    let input = [];
+    let buf = &mut Vec::new();
+    // Save the array.
+    input.save(buf)?;
+    // Read the array value.
+    let mut loaded_array = [0u8; 0];
+    loaded_array.load(&mut buf.as_slice())?;
+    // Compare the results.
+    assert_eq!(loaded_array, input);
+
+    Ok(())
+  }
+  #[test]
   fn savable_vec_with_values_roundtrips() -> Result<()> {
-    let case = vec![1u8, 2u8, 3u8];
+    let input = vec![1u8, 2u8, 3u8];
     let buf = &mut Vec::new();
     // Save the vector.
-    case.save(buf)?;
+    input.save(buf)?;
     // Read the vector value.
     let result: Vec<u8> = read_value::<Vec<u8>>(&mut buf.as_slice())?;
     // Compare the results.
-    assert_eq!(result, case);
+    assert_eq!(result, input);
 
     Ok(())
   }
   #[test]
   fn savable_vec_with_empty_roundtrips() -> Result<()> {
-    let case = vec![];
+    let input = vec![];
     let buf = &mut Vec::new();
     // Save the vector.
-    case.save(buf)?;
+    input.save(buf)?;
     // Read the vector value.
     let result: Vec<u8> = read_value::<Vec<u8>>(&mut buf.as_slice())?;
 
     // Compare the results.
-    assert_eq!(result, case);
+    assert_eq!(result, input);
 
     Ok(())
   }
@@ -292,8 +337,8 @@ mod tests {
   fn savable_str_roundtrips() -> Result<()> {
     assert_eq!(tests::round_trip(String::from(""))?, String::from(""));
     assert_eq!(
-      tests::round_trip(String::from("my_test_case"))?,
-      String::from("my_test_case")
+      tests::round_trip(String::from("my_test_input"))?,
+      String::from("my_test_input")
     );
     Ok(())
   }

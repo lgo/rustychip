@@ -10,5 +10,9 @@
         "target/": true,
         "**/Cargo.lock": true,
         "third_party/cargo/vendor": true,
+        "**/.classpath": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/.factorypath": true
     }
 }

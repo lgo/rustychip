@@ -1,13 +1,13 @@
 [package]
 
-name = "rusty-emulators"
+name = "rustyemulator"
 version = "0.0.1"
 authors = ["Joey Pereira <joey@pereira.io>"]
 edition = "2018"
 
 [[bin]]
 
-name = "rusty-emulators"
+name = "rustyemulator"
 path = "src/main.rs"
 
 [dependencies]
