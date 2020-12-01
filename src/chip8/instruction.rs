@@ -444,6 +444,54 @@ pub enum Instruction {
   /// assert_eq!(instr, Instruction::MemorySetToVarSpriteLocation { x_register: 0x2 });
   /// ```
   MemorySetToVarSpriteLocation { x_register: usize },
+  /// Opcode FX33
+  ///
+  /// Stores the binary-coded decimal representation of Vx, with the
+  /// most significant of three digits at the address in I, the middle
+  /// digit at I plus 1, and the least significant digit at I plus 2.
+  /// (In other words, take the decimal representation of Vx, place the
+  /// hundreds digit in memory at location in I, the tens digit at
+  /// location I+1, and the ones digit at location I+2.)
+  ///
+  /// ```
+  /// # use rustyemulator::chip8::instruction::{parse_instruction, Instruction};
+  /// let instr = parse_instruction(0xF233);
+  /// assert!(matches!(instr, Instruction::LoadBinaryCodedDecimal {..}), "Expected to parse LoadBinaryCodedDecimal, instead parsed opcode: {:?}", instr);
+  /// assert_eq!(instr, Instruction::LoadBinaryCodedDecimal { x_register: 0x2 });
+  /// ```
+  LoadBinaryCodedDecimal { x_register: usize },
+  /// Opcode FX55
+  ///
+  /// Stores V0 to Vx (including Vx) in memory starting at address I.
+  /// The offset from I is increased by 1 for each value written, but I
+  /// itself is left unmodified.
+  ///
+  /// NB: In the original CHIP-8 implementation, and also in CHIP-48, I
+  /// is left incremented after this instruction had been executed. In
+  /// SCHIP, I is left unmodified.
+  ///
+  /// ```
+  /// # use rustyemulator::chip8::instruction::{parse_instruction, Instruction};
+  /// let instr = parse_instruction(0xF255);
+  /// assert!(matches!(instr, Instruction::MemoryDump {..}), "Expected to parse MemoryDump, instead parsed opcode: {:?}", instr);
+  /// assert_eq!(instr, Instruction::MemoryDump { x_register: 0x2 });
+  /// ```
+  MemoryDump { x_register: usize },
+  /// Opcode FX65
+  ///
+  /// Fills V0 to Vx (including Vx) with values from memory starting at
+  /// address I. The offset from I is increased by 1 for each value
+  /// written, but I itself is left unmodified.
+  ///
+  /// NB: See note for MemoryDump for system compability.
+  ///
+  /// ```
+  /// # use rustyemulator::chip8::instruction::{parse_instruction, Instruction};
+  /// let instr = parse_instruction(0xF265);
+  /// assert!(matches!(instr, Instruction::MemoryLoad {..}), "Expected to parse MemoryLoad, instead parsed opcode: {:?}", instr);
+  /// assert_eq!(instr, Instruction::MemoryLoad { x_register: 0x2 });
+  /// ```
+  MemoryLoad { x_register: usize },
 }
 
 pub fn parse_instruction(instr: u16) -> Instruction {
@@ -576,6 +624,15 @@ pub fn parse_instruction(instr: u16) -> Instruction {
         x_register: bitmask_0X00(instr) as usize,
       },
       0x0029 => Instruction::MemorySetToVarSpriteLocation {
+        x_register: bitmask_0X00(instr) as usize,
+      },
+      0x0033 => Instruction::LoadBinaryCodedDecimal {
+        x_register: bitmask_0X00(instr) as usize,
+      },
+      0x0055 => Instruction::MemoryDump {
+        x_register: bitmask_0X00(instr) as usize,
+      },
+      0x0065 => Instruction::MemoryLoad {
         x_register: bitmask_0X00(instr) as usize,
       },
       _ => unimplemented!("Unsupported instruction... TODO"),
