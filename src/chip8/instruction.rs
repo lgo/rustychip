@@ -527,7 +527,7 @@ pub fn parse_instruction(instr: u16) -> Instruction {
         x_register: bitmask_0X00(instr) as usize,
         y_register: bitmask_00Y0(instr) as usize,
       },
-      _ => unimplemented!("Unsupported instruction... TODO"),
+      _ => unimplemented!("Unsupported instruction received: {:X}", instr),
     },
     0x6000 => Instruction::ConstSetVar {
       x_register: bitmask_0X00(instr) as usize,
@@ -574,14 +574,14 @@ pub fn parse_instruction(instr: u16) -> Instruction {
         x_register: bitmask_0X00(instr) as usize,
         y_register: bitmask_00Y0(instr) as usize,
       },
-      _ => unimplemented!("Unsupported instruction... TODO"),
+      _ => unimplemented!("Unsupported instruction received: {:X}", instr),
     },
     0x9000 => match instr & 0x000F {
       0x0000 => Instruction::CondSkipIfNotEqualVar {
         x_register: bitmask_0X00(instr) as usize,
         y_register: bitmask_00Y0(instr) as usize,
       },
-      _ => unimplemented!("Unsupported instruction... TODO"),
+      _ => unimplemented!("Unsupported instruction received: {:X}", instr),
     },
     0xA000 => Instruction::MemorySetAddress {
       constant: bitmask_0NNN(instr),
@@ -605,7 +605,7 @@ pub fn parse_instruction(instr: u16) -> Instruction {
       0x00A1 => Instruction::InputKeyIsNotPressed {
         x_register: bitmask_0X00(instr) as usize,
       },
-      _ => unimplemented!("Unsupported instruction... TODO"),
+      _ => unimplemented!("Unsupported instruction received: {:X}", instr),
     },
     0xF000 => match instr & 0x00FF {
       0x0007 => Instruction::TimerGetDelay {
@@ -635,9 +635,9 @@ pub fn parse_instruction(instr: u16) -> Instruction {
       0x0065 => Instruction::MemoryLoad {
         x_register: bitmask_0X00(instr) as usize,
       },
-      _ => unimplemented!("Unsupported instruction... TODO"),
+      _ => unimplemented!("Unsupported instruction received: {:X}", instr),
     },
-    _ => unimplemented!("TODO(joey): unhandled opcode: {:X}", instr),
+    _ => unimplemented!("Unsupported instruction received: {:X}", instr),
   }
 }
 
