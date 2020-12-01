@@ -6,11 +6,18 @@ authors = ["Joey Pereira <joey@pereira.io>"]
 edition = "2018"
 
 [[bin]]
+name = "chip8"
+path = "src/chip8/main.rs"
 
-name = "rustyemulator"
-path = "src/main.rs"
+[[bin]]
+name = "chip8-instruction-read-tester"
+path = "src/chip8/instruction_read_tester/main.rs"
 
 [dependencies]
+clap = "2.33.3"
+env_logger = "0.8.2"
 getopts = "0.2"
+log = "0.4.11"
 sdl2 = "0.34"
+thiserror = "1.0.22"
 time = "0.2"

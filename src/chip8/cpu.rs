@@ -1,3 +1,4 @@
+use crate::chip8::instruction::Instruction;
 use crate::chip8::timer::Timer;
 use crate::interface::emulator::Clocked;
 use crate::interface::serialization::Savable;
@@ -79,6 +80,138 @@ impl Cpu {
       memory: [0; 4096],
       stack: [0; 16],
       sp: 0,
+    }
+  }
+
+  fn handle_instruction(&mut self, instr: Instruction) {
+    use Instruction::*;
+    match instr {
+      Call { address } => unimplemented!("TODO(joey): implement"),
+      DisplayClear() => unimplemented!("TODO(joey): implemenent"),
+      FlowSubroutineReturn() => unimplemented!("TODO(joey): implemenent"),
+      FlowJumpToAddress { address } => unimplemented!("TODO(joey): implement"),
+      FlowSubroutineCall { address } => unimplemented!("TODO(joey): implement"),
+      CondSkipIfEqualConst {
+        x_register,
+        constant,
+      } => {
+        if self.v_registers[x_register] == constant {
+          self.program_counter += 1
+        }
+      }
+      CondSkipIfNotEqualConst {
+        x_register,
+        constant,
+      } => {
+        if self.v_registers[x_register] != constant {
+          self.program_counter += 1
+        }
+      }
+      CondSkipIfEqualVar {
+        x_register,
+        y_register,
+      } => {
+        if self.v_registers[x_register] == self.v_registers[y_register] {
+          self.program_counter += 1
+        }
+      }
+      ConstSetVar {
+        x_register,
+        constant,
+      } => self.v_registers[x_register] = constant,
+      ConstIncrementVar {
+        x_register,
+        constant,
+      } => self.v_registers[x_register] += constant,
+      AssignVar {
+        x_register,
+        y_register,
+      } => self.v_registers[x_register] = self.v_registers[y_register],
+      BitwiseOrVar {
+        x_register,
+        y_register,
+      } => self.v_registers[x_register] |= self.v_registers[y_register],
+      BitwiseAndVar {
+        x_register,
+        y_register,
+      } => self.v_registers[x_register] &= self.v_registers[y_register],
+      BitwiseXorVar {
+        x_register,
+        y_register,
+      } => self.v_registers[x_register] ^= self.v_registers[y_register],
+      MathAddVar {
+        x_register,
+        y_register,
+      } => {
+        let result = self.v_registers[x_register] + self.v_registers[y_register];
+        let has_overflow = (self.v_registers[x_register] < result);
+        self.v_registers[0xF] = if has_overflow { 1 } else { 0 };
+        self.v_registers[x_register] = result
+      }
+      MathSubVar {
+        x_register,
+        y_register,
+      } => {
+        let result = self.v_registers[x_register] - self.v_registers[y_register];
+        let has_underflow = (self.v_registers[x_register] > result);
+        self.v_registers[0xF] = if has_underflow { 0 } else { 1 };
+        self.v_registers[x_register] = result
+      }
+      BitShiftRightVar {
+        x_register,
+        y_register,
+      } => {
+        let lsb = self.v_registers[x_register] & 0b0001;
+        self.v_registers[0xF] = lsb;
+        self.v_registers[x_register] >>= 1
+      }
+      MathReverseSubtractVar {
+        x_register,
+        y_register,
+      } => {
+        let result = self.v_registers[y_register] - self.v_registers[x_register];
+        let has_underflow = (self.v_registers[y_register] > result);
+        self.v_registers[0xF] = if has_underflow { 0 } else { 1 };
+        self.v_registers[y_register] = result
+      }
+      BitShiftLeftVar {
+        x_register,
+        y_register,
+      } => {
+        let msb = self.v_registers[x_register] & 0b1000;
+        self.v_registers[0xF] = msb;
+        self.v_registers[x_register] <<= 1
+      }
+      CondSkipIfNotEqualVar {
+        x_register,
+        y_register,
+      } => {
+        if self.v_registers[x_register] != self.v_registers[y_register] {
+          self.program_counter += 1
+        }
+      }
+      MemorySetAddress { constant: u16 } => unimplemented!("TODO(joey): implement"),
+      FlowJumpToAddressPlusVar { constant: u16 } => unimplemented!("TODO(joey): implement"),
+      RandomByConstant {
+        x_register,
+        constant,
+      } => unimplemented!("TODO(joey): implement"),
+      DisplayDraw {
+        x_register,
+        y_register,
+        constant,
+      } => unimplemented!("TODO(joey): implement"),
+      InputKeyIsPressed { x_register } => unimplemented!("TODO(joey): implement"),
+      InputKeyIsNotPressed { x_register } => unimplemented!("TODO(joey): implement"),
+      TimerGetDelay { x_register } => unimplemented!("TODO(joey): implement"),
+      InputKeyAwaitPress { x_register } => unimplemented!("TODO(joey): implement"),
+      TimerSetDelay { x_register } => unimplemented!("TODO(joey): implement"),
+      TimerSetSound { x_register } => unimplemented!("TODO(joey): implement"),
+      MemoryAddVerToAddress { x_register } => unimplemented!("TODO(joey): implement"),
+      MemorySetToVarSpriteLocation { x_register } => unimplemented!("TODO(joey): implement"),
+      LoadBinaryCodedDecimal { x_register } => unimplemented!("TODO(joey): implement"),
+      MemoryDump { x_register } => unimplemented!("TODO(joey): implement"),
+      MemoryLoad { x_register } => unimplemented!("TODO(joey): implement"),
     }
   }
 }

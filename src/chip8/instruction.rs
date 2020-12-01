@@ -1,5 +1,19 @@
 //! instruction provides parsing for the Chip8 machine language as well
 //! as struct representations, used for emulation.
+//!
+//! References include:
+//! * Wikipedia Chip8 Reference: https://en.wikipedia.org/wiki/CHIP-8
+//! * Cowgod's Technical Reference: http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0nnn
+
+use thiserror::Error;
+
+/// TODO(joey): Document InstructionError.
+#[derive(Error, Debug)]
+pub enum InstructionError {
+  /// TODO(joey): Document UnsupportedInstructionError.
+  #[error("Unsupported instruction error")]
+  UnsupportedInstructionError { instruction: u16 },
+}
 
 /// Instruction is the enum (and struct) for all Chip8 opcodes along
 /// with the operands corresponding to the opcode.
@@ -35,6 +49,11 @@ pub enum Instruction {
   ///
   /// From Wikipedia: Calls machine code routine (RCA 1802 for COSMAC
   /// VIP) at address NNN. Not necessary for most ROMs.
+  ///
+  ///
+  /// From Cowgod's Technical Reference: This instruction is only used
+  /// on the old computers on which Chip-8 was originally implemented.
+  /// It is ignored by modern interpreters.
   ///
   /// ```
   /// # use rustyemulator::chip8::instruction::{parse_instruction, Instruction};
@@ -494,150 +513,152 @@ pub enum Instruction {
   MemoryLoad { x_register: usize },
 }
 
-pub fn parse_instruction(instr: u16) -> Instruction {
+/// parse_instruction will parse a Chip8 instruction (2 bytes) into the
+/// Instruction enum.
+pub fn parse_instruction(instr: u16) -> Result<Instruction, InstructionError> {
   match instr & 0xF000 {
     0x0000 => {
       // Because Call has overlapping instructions with DisplayClear and
       // FlowSubroutineReturn, the more specific opcodes (DisplayClear,
       // FlowSubroutineReturn) are parsed first.
       match instr {
-        0x00E0 => Instruction::DisplayClear(),
-        0x00EE => Instruction::FlowSubroutineReturn(),
-        _ => Instruction::Call {
+        0x00E0 => Ok(Instruction::DisplayClear()),
+        0x00EE => Ok(Instruction::FlowSubroutineReturn()),
+        _ => Ok(Instruction::Call {
           address: bitmask_0NNN(instr) as usize,
-        },
+        }),
       }
     }
-    0x1000 => Instruction::FlowJumpToAddress {
+    0x1000 => Ok(Instruction::FlowJumpToAddress {
       address: bitmask_0NNN(instr) as usize,
-    },
-    0x2000 => Instruction::FlowSubroutineCall {
+    }),
+    0x2000 => Ok(Instruction::FlowSubroutineCall {
       address: bitmask_0NNN(instr) as usize,
-    },
-    0x3000 => Instruction::CondSkipIfEqualConst {
+    }),
+    0x3000 => Ok(Instruction::CondSkipIfEqualConst {
       x_register: bitmask_0X00(instr) as usize,
       constant: bitmask_00NN(instr),
-    },
-    0x4000 => Instruction::CondSkipIfNotEqualConst {
+    }),
+    0x4000 => Ok(Instruction::CondSkipIfNotEqualConst {
       x_register: bitmask_0X00(instr) as usize,
       constant: bitmask_00NN(instr),
-    },
+    }),
     0x5000 => match instr & 0x000F {
-      0x0000 => Instruction::CondSkipIfEqualVar {
+      0x0000 => Ok(Instruction::CondSkipIfEqualVar {
         x_register: bitmask_0X00(instr) as usize,
         y_register: bitmask_00Y0(instr) as usize,
-      },
-      _ => unimplemented!("Unsupported instruction received: {:X}", instr),
+      }),
+      _ => Err(InstructionError::UnsupportedInstructionError { instruction: instr }),
     },
-    0x6000 => Instruction::ConstSetVar {
+    0x6000 => Ok(Instruction::ConstSetVar {
       x_register: bitmask_0X00(instr) as usize,
       constant: bitmask_00NN(instr),
-    },
-    0x7000 => Instruction::ConstIncrementVar {
+    }),
+    0x7000 => Ok(Instruction::ConstIncrementVar {
       x_register: bitmask_0X00(instr) as usize,
       constant: bitmask_00NN(instr),
-    },
+    }),
     0x8000 => match instr & 0x000F {
-      0x0000 => Instruction::AssignVar {
+      0x0000 => Ok(Instruction::AssignVar {
         x_register: bitmask_0X00(instr) as usize,
         y_register: bitmask_00Y0(instr) as usize,
-      },
-      0x0001 => Instruction::BitwiseOrVar {
+      }),
+      0x0001 => Ok(Instruction::BitwiseOrVar {
         x_register: bitmask_0X00(instr) as usize,
         y_register: bitmask_00Y0(instr) as usize,
-      },
-      0x0002 => Instruction::BitwiseAndVar {
+      }),
+      0x0002 => Ok(Instruction::BitwiseAndVar {
         x_register: bitmask_0X00(instr) as usize,
         y_register: bitmask_00Y0(instr) as usize,
-      },
-      0x0003 => Instruction::BitwiseXorVar {
+      }),
+      0x0003 => Ok(Instruction::BitwiseXorVar {
         x_register: bitmask_0X00(instr) as usize,
         y_register: bitmask_00Y0(instr) as usize,
-      },
-      0x0004 => Instruction::MathAddVar {
+      }),
+      0x0004 => Ok(Instruction::MathAddVar {
         x_register: bitmask_0X00(instr) as usize,
         y_register: bitmask_00Y0(instr) as usize,
-      },
-      0x0005 => Instruction::MathSubVar {
+      }),
+      0x0005 => Ok(Instruction::MathSubVar {
         x_register: bitmask_0X00(instr) as usize,
         y_register: bitmask_00Y0(instr) as usize,
-      },
-      0x0006 => Instruction::BitShiftRightVar {
+      }),
+      0x0006 => Ok(Instruction::BitShiftRightVar {
         x_register: bitmask_0X00(instr) as usize,
         y_register: bitmask_00Y0(instr) as usize,
-      },
-      0x0007 => Instruction::MathReverseSubtractVar {
+      }),
+      0x0007 => Ok(Instruction::MathReverseSubtractVar {
         x_register: bitmask_0X00(instr) as usize,
         y_register: bitmask_00Y0(instr) as usize,
-      },
-      0x000E => Instruction::BitShiftLeftVar {
+      }),
+      0x000E => Ok(Instruction::BitShiftLeftVar {
         x_register: bitmask_0X00(instr) as usize,
         y_register: bitmask_00Y0(instr) as usize,
-      },
-      _ => unimplemented!("Unsupported instruction received: {:X}", instr),
+      }),
+      _ => Err(InstructionError::UnsupportedInstructionError { instruction: instr }),
     },
     0x9000 => match instr & 0x000F {
-      0x0000 => Instruction::CondSkipIfNotEqualVar {
+      0x0000 => Ok(Instruction::CondSkipIfNotEqualVar {
         x_register: bitmask_0X00(instr) as usize,
         y_register: bitmask_00Y0(instr) as usize,
-      },
-      _ => unimplemented!("Unsupported instruction received: {:X}", instr),
+      }),
+      _ => Err(InstructionError::UnsupportedInstructionError { instruction: instr }),
     },
-    0xA000 => Instruction::MemorySetAddress {
+    0xA000 => Ok(Instruction::MemorySetAddress {
       constant: bitmask_0NNN(instr),
-    },
-    0xB000 => Instruction::FlowJumpToAddressPlusVar {
+    }),
+    0xB000 => Ok(Instruction::FlowJumpToAddressPlusVar {
       constant: bitmask_0NNN(instr),
-    },
-    0xC000 => Instruction::RandomByConstant {
+    }),
+    0xC000 => Ok(Instruction::RandomByConstant {
       x_register: bitmask_0X00(instr) as usize,
       constant: bitmask_00NN(instr),
-    },
-    0xD000 => Instruction::DisplayDraw {
+    }),
+    0xD000 => Ok(Instruction::DisplayDraw {
       x_register: bitmask_0X00(instr) as usize,
       y_register: bitmask_00Y0(instr) as usize,
       constant: bitmask_000N(instr),
-    },
+    }),
     0xE000 => match instr & 0x00FF {
-      0x009E => Instruction::InputKeyIsPressed {
+      0x009E => Ok(Instruction::InputKeyIsPressed {
         x_register: bitmask_0X00(instr) as usize,
-      },
-      0x00A1 => Instruction::InputKeyIsNotPressed {
+      }),
+      0x00A1 => Ok(Instruction::InputKeyIsNotPressed {
         x_register: bitmask_0X00(instr) as usize,
-      },
-      _ => unimplemented!("Unsupported instruction received: {:X}", instr),
+      }),
+      _ => Err(InstructionError::UnsupportedInstructionError { instruction: instr }),
     },
     0xF000 => match instr & 0x00FF {
-      0x0007 => Instruction::TimerGetDelay {
+      0x0007 => Ok(Instruction::TimerGetDelay {
         x_register: bitmask_0X00(instr) as usize,
-      },
-      0x000A => Instruction::InputKeyAwaitPress {
+      }),
+      0x000A => Ok(Instruction::InputKeyAwaitPress {
         x_register: bitmask_0X00(instr) as usize,
-      },
-      0x0015 => Instruction::TimerSetDelay {
+      }),
+      0x0015 => Ok(Instruction::TimerSetDelay {
         x_register: bitmask_0X00(instr) as usize,
-      },
-      0x0018 => Instruction::TimerSetSound {
+      }),
+      0x0018 => Ok(Instruction::TimerSetSound {
         x_register: bitmask_0X00(instr) as usize,
-      },
-      0x001E => Instruction::MemoryAddVerToAddress {
+      }),
+      0x001E => Ok(Instruction::MemoryAddVerToAddress {
         x_register: bitmask_0X00(instr) as usize,
-      },
-      0x0029 => Instruction::MemorySetToVarSpriteLocation {
+      }),
+      0x0029 => Ok(Instruction::MemorySetToVarSpriteLocation {
         x_register: bitmask_0X00(instr) as usize,
-      },
-      0x0033 => Instruction::LoadBinaryCodedDecimal {
+      }),
+      0x0033 => Ok(Instruction::LoadBinaryCodedDecimal {
         x_register: bitmask_0X00(instr) as usize,
-      },
-      0x0055 => Instruction::MemoryDump {
+      }),
+      0x0055 => Ok(Instruction::MemoryDump {
         x_register: bitmask_0X00(instr) as usize,
-      },
-      0x0065 => Instruction::MemoryLoad {
+      }),
+      0x0065 => Ok(Instruction::MemoryLoad {
         x_register: bitmask_0X00(instr) as usize,
-      },
-      _ => unimplemented!("Unsupported instruction received: {:X}", instr),
+      }),
+      _ => Err(InstructionError::UnsupportedInstructionError { instruction: instr }),
     },
-    _ => unimplemented!("Unsupported instruction received: {:X}", instr),
+    _ => Err(InstructionError::UnsupportedInstructionError { instruction: instr }),
   }
 }
 
